@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro de Peixes</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="form-container">
+    <h1>Cadastro de Peixes</h1>
+
+    <form id="userForm">
+        <label for="quantidade_unidades">Quantidade em Unidades</label>
+        <input type="number" id="quantidade_unidades" placeholder="Quantidade em unidades" required>
+
+        <label for="especie">Especie</label>
+        <input type="text" id="especie" placeholder="Digite a especie do peixe" required>
+
+        <label for="tanque_id">tanque_id</label>
+        <input type="number" id="tanque_id" placeholder="Qual tanque o peixe está" required>
+
+        <label for="observacoes">Observacoes</label>
+        <input type="text" id="observacoes" placeholder="Observacoes" required>
+
+        <label for="id">buscarId</label>
+        <input type="Integer" id="id" placeholder="buscarId" >
+
+        <div class="buttons">
+            <button type="button" onclick="criar()">Criar</button>
+            <button type="button" class="warning" onclick="atualizar()">Atualizar</button>
+            <button type="button" class="danger" onclick="deletar()">Deletar</button>
+            <button type="button" class="info" onclick="buscar()">Buscar</button>
+        </div>
+    </form>
+
+    <pre id="resultadoBuscar"></pre>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+    const api = "/peixe";
+
+    function showToast(message, type = "info") {
+      const toast = document.createElement("div");
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.getElementById("toast-container").appendChild(toast);
+
+      setTimeout(() => toast.classList.add("show"), 100);
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    async function criar() {
+      const resp = await fetch(api, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          especie: document.getElementById("especie").value,
+          observacoes: document.getElementById("observacoes").value,
+          quantidade_unidades: document.getElementById("quantidade_unidades").value,
+          tanque_id: document.getElementById("tanque_id").value
+        })
+      });
+      showToast(resp.ok ? "Peixe criado com sucesso!" : "Erro ao criar!", resp.ok ? "success" : "error");
+    }
+
+    async function buscar() {
+      const id = document.getElementById("id").value;
+      const resp = await fetch(`${api}?id=${encodeURIComponent(id)}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        document.getElementById("resultadoBuscar").innerText = JSON.stringify(data, null, 2);
+        showToast("Peixe encontrado!", "success");
+      } else {
+        document.getElementById("resultadoBuscar").innerText = "Peixe não encontrado!";
+        showToast("Peixe não encontrado!", "error");
+      }
+    }
+
+    async function deletar() {
+      const id = document.getElementById("id").value;
+      const resp = await fetch(`${api}?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      showToast(resp.ok ? "Peixe deletado!" : "Erro ao deletar!", resp.ok ? "success" : "error");
+    }
+
+    async function atualizar() {
+      const id = document.getElementById("id").value;
+      const res = await fetch(`${api}?id=${encodeURIComponent(id)}`);
+      const data = await res.json();
+      const resp = await fetch(`${api}?id=${data.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          especie: document.getElementById("especie").value,
+          observacoes: document.getElementById("observacoes").value,
+          quantidade_unidades: document.getElementById("quantidade_unidades").value,
+          tanque_id: document.getElementById("tanque_id").value
+        })
+      });
+      showToast(resp.ok ? "Peixe atualizado!" : "Erro ao atualizar!", resp.ok ? "success" : "error");
+    }
+</script>
+</body>
+</html>
